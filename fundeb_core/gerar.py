@@ -33,7 +33,7 @@ def gerar(brutos: Path, saida: Path, raiz: Path = RAIZ) -> dict:
     if saida.exists():
         shutil.rmtree(saida)
     (saida / "dados").mkdir(parents=True)
-    for f in ("index.html", "portal.js", "estilo.css"):
+    for f in ("index.html", "portal.js", "estilo.css", "logo-techplayedu-roxo.png", "logo-techplayedu-amarelo.png"):
         shutil.copy2(raiz / "web" / f, saida / f)
 
     bcfg = config["brasoes"]
