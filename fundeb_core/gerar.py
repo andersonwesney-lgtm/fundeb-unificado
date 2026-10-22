@@ -48,6 +48,8 @@ def gerar(brutos: Path, saida: Path, raiz: Path = RAIZ) -> dict:
     for nome in ("ibge_municipios", "siope_entes", "siope_manifest"):
         m = json.loads((brutos / f"{nome}.meta.json").read_text(encoding="utf-8"))
         m["descricao"] = config["fontes"][nome]["descricao"]
+        if m.get("reserva"):  # fonte fora do ar nesta execução: fica visível no portal que é a cópia da última coleta
+            m["descricao"] += " — CÓPIA DA ÚLTIMA COLETA (fonte indisponível nesta execução)"
         fontes.append(m)
     fontes.append({"nome": "painel_fundeb2027_codigos", "descricao": painel["descricao"],
                    "sha256": painel["sha256"], "verificado_em": painel["verificado_em"],
