@@ -5,40 +5,45 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Fundeb integrado</title>
 <meta name="description" content="Cadastro único de entes e acesso aos sistemas de acompanhamento do Fundeb (Lei nº 14.113/2020).">
+<meta name="theme-color" content="#48206B">
 <link rel="stylesheet" href="estilo.css">
 </head>
 <body>
-<header class="topo">
-  <div class="marca">
-    <h1 id="titulo">Fundeb integrado</h1>
-    <p id="subtitulo" class="sub"></p>
-  </div>
-  <p id="atalhos" class="acesso-rapido" hidden></p>
-  <nav class="menu" aria-label="Sistemas">
-    <a href="./" class="ativo" aria-current="page">Início</a>
-    <span id="menuSistemas"></span>
-  </nav>
-</header>
+<div class="wrap">
+  <header class="top">
+    <div class="marca"><img class="claro" src="logo-techplayedu-roxo.png" alt="Tech Play Edu"><img class="escuro" src="logo-techplayedu-amarelo.png" alt="Tech Play Edu"></div>
+    <div>
+      <div class="eyebrow">Fundeb · Lei nº 14.113/2020 · cadastro único de entes</div>
+      <h1 id="titulo">Fundeb integrado</h1>
+      <p id="subtitulo" class="sub"></p>
+    </div>
+    <div class="topo-ctl">
+      <div id="atalhos" class="acesso-rapido" hidden></div>
+      <div class="tema" role="group" aria-label="Tema de cores"><button type="button" data-t="">Automático</button><button type="button" data-t="light">Claro</button><button type="button" data-t="dark">Escuro</button></div>
+    </div>
+  </header>
 
-<main>
+  <div id="tpeBarra">
+    <button class="hamb" id="bMenu" type="button" aria-expanded="false" aria-controls="tpeMenu"><span class="ico" aria-hidden="true"><i></i><i></i><i></i></span>Menu</button>
+    <div class="atual"><small>Fundeb integrado</small><b id="secAtual">Encontrar o ente</b></div>
+  </div>
+
   <p id="fase" class="aviso"></p>
 
-  <section class="busca" aria-labelledby="hBusca">
+  <section class="panel filtros busca" id="s-busca" aria-labelledby="hBusca">
     <h2 id="hBusca">Encontrar o ente</h2>
-    <div class="campos">
-      <label>Município, estado ou código
-        <input id="q" type="search" autocomplete="off" placeholder="Ex.: Arapiraca, 2700300, 270030 ou AL">
-      </label>
-      <label>UF
-        <select id="uf"><option value="">Todas</option></select>
-      </label>
+    <div class="frow">
+      <div class="f f-largo"><label for="q">Município, estado ou código</label>
+        <input id="q" type="search" autocomplete="off" placeholder="Ex.: Arapiraca, 2700300, 270030 ou AL"></div>
+      <div class="f"><label for="uf">UF</label>
+        <select id="uf"><option value="">Todas</option></select></div>
     </div>
     <ul id="resultados" class="resultados" aria-live="polite"></ul>
   </section>
 
-  <section id="ficha" class="ficha" hidden aria-live="polite"></section>
+  <section id="ficha" class="panel ficha" hidden aria-live="polite"></section>
 
-  <section class="sobre" aria-labelledby="hSobre">
+  <section class="panel sobre" id="s-sobre" aria-labelledby="hSobre">
     <h2 id="hSobre">Como ler esta página</h2>
     <ul>
       <li>Esta aba não calcula nem republica valores do Fundeb. Ela identifica o ente da mesma forma nos sistemas e leva a cada um deles; os números ficam nos sistemas de origem, com a fonte e o período de cada um.</li>
@@ -46,9 +51,23 @@
       <li>Cada sistema responde a uma pergunta diferente e tem o seu próprio período de referência, indicado no cartão.</li>
     </ul>
   </section>
-</main>
 
-<footer id="rodape" class="rodape"></footer>
+  <footer id="rodape" class="rodape"></footer>
+</div>
+
+<aside id="tpeMenu" aria-label="Menu de navegação" aria-hidden="true">
+  <div class="mtopo"><span><img class="claro" src="logo-techplayedu-roxo.png" alt="Tech Play Edu"><img class="escuro" src="logo-techplayedu-amarelo.png" alt="Tech Play Edu"></span>
+    <button class="fechar" id="bFechar" type="button" aria-label="Fechar o menu">×</button></div>
+  <nav>
+    <div class="mgrp">Nesta página</div>
+    <a class="mitem" href="#s-busca" data-sec="Encontrar o ente" aria-current="page">Encontrar o ente</a>
+    <a class="mitem" href="#ficha" data-sec="Ficha do ente" id="mFicha" hidden>Ficha do ente</a>
+    <a class="mitem" href="#s-sobre" data-sec="Como ler esta página">Como ler esta página</a>
+    <div class="mgrp">Sistemas</div>
+    <span id="menuSistemas"></span>
+  </nav>
+</aside>
+<div id="tpeFundo"></div>
 <script src="portal.js"></script>
 </body>
 </html>
