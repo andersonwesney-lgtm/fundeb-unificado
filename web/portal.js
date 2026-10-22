@@ -28,6 +28,13 @@ async function iniciar() {
   $("#titulo").textContent = S.man.portal.titulo;
   $("#subtitulo").textContent = S.man.portal.subtitulo;
   $("#fase").textContent = S.man.portal.fase;
+  const atalhos = S.man.portal.atalhos || [];
+  if (atalhos.length) {
+    $("#atalhos").innerHTML = atalhos.map((a) =>
+      `<a class="botao" href="${esc(a.url)}" rel="noopener">${esc(a.texto)} →</a>` +
+      (a.detalhe ? `<span class="sub">${esc(a.detalhe)}</span>` : "")).join("");
+    $("#atalhos").hidden = false;
+  }
   $("#menuSistemas").innerHTML = S.man.sistemas
     .map((s) => `<a href="${esc(s.url)}" rel="noopener">${esc(s.nome)}</a>`).join("");
   const ufs = [...new Set(S.entes.map((e) => e.uf))].sort();
