@@ -23,12 +23,15 @@ def main(argv=None) -> int:
     p.add_argument("comando", choices=["coletar", "gerar", "servir"])
     p.add_argument("--brutos", default=str(RAIZ / "brutos"))
     p.add_argument("--saida", default=str(RAIZ / "site"))
+    p.add_argument("--reserva", help="pasta com os brutos da última execução bem-sucedida (usada só se uma fonte falhar)")
     a = p.parse_args(argv)
     try:
         if a.comando == "coletar":
             config = json.loads((RAIZ / "config" / "sistemas.json").read_text(encoding="utf-8"))
-            for m in coletar_tudo(config, Path(a.brutos)):
-                print(f"{m['nome']}: {m['bytes']} bytes, SHA-256 {m['sha256']}")
+            res = Path(a.reserva) if a.reserva and Path(a.reserva).is_dir() else None
+            for m in coletar_tudo(config, Path(a.brutos), res):
+                aviso = f"  [CÓPIA DE RESERVA coletada em {m['coletado_em']}: {m['motivo_reserva']}]" if m.get("reserva") else ""
+                print(f"{m['nome']}: {m['bytes']} bytes, SHA-256 {m['sha256']}{aviso}")
         elif a.comando == "gerar":
             m = gerar(Path(a.brutos), Path(a.saida))
             print(f"site gerado: {m['entes']['total']} entes {m['entes']['por_tipo']}; entes.json SHA-256 {m['entes']['sha256']}")
