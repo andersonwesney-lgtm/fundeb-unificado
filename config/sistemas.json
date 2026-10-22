@@ -3,7 +3,14 @@
   "titulo": "Fundeb integrado",
   "subtitulo": "Cadastro único de entes e acesso aos sistemas de acompanhamento do Fundeb (Lei nº 14.113/2020)",
   "url_publica": "https://andersonwesney-lgtm.github.io/fundeb-unificado/",
-  "fase": "Fase 1 — portal: cadastro único de entes com brasão e procedência, menu comum, parâmetro de URL comum e ligações entre os sistemas. Nenhum valor financeiro é calculado ou republicado aqui."
+  "fase": "Fase 1 — portal: cadastro único de entes com brasão e procedência, menu comum, parâmetro de URL comum e ligações entre os sistemas. Nenhum valor financeiro é calculado ou republicado aqui.",
+  "atalhos": [
+   {
+    "texto": "Painel SIOPE e Fundeb",
+    "url": "https://andersonwesney-lgtm.github.io/painel-siope-fundeb/?ano=2026&bim=4",
+    "detalhe": "Exercício 2026, 4º bimestre"
+   }
+  ]
  },
  "fontes": {
   "ibge_municipios": {
