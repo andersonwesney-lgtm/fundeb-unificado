@@ -1,0 +1,69 @@
+{
+ "portal": {
+  "titulo": "Fundeb integrado",
+  "subtitulo": "Cadastro único de entes e acesso aos sistemas de acompanhamento do Fundeb (Lei nº 14.113/2020)",
+  "url_publica": "https://andersonwesney-lgtm.github.io/fundeb-unificado/",
+  "fase": "Fase 1 — portal: cadastro único de entes com brasão e procedência, menu comum, parâmetro de URL comum e ligações entre os sistemas. Nenhum valor financeiro é calculado ou republicado aqui."
+ },
+ "fontes": {
+  "ibge_municipios": {
+   "url": "https://servicodados.ibge.gov.br/api/v1/localidades/municipios",
+   "descricao": "IBGE — API de Localidades, lista oficial de municípios (código de 7 dígitos)"
+  },
+  "siope_entes": {
+   "url": "https://andersonwesney-lgtm.github.io/painel-siope-fundeb/dados/entes.json",
+   "descricao": "Painel SIOPE e Fundeb — cadastro de entes publicado (identificador SIOPE de 6 dígitos e UF-XX)"
+  },
+  "siope_manifest": {
+   "url": "https://andersonwesney-lgtm.github.io/painel-siope-fundeb/dados/manifest.json",
+   "descricao": "Painel SIOPE e Fundeb — manifesto publicado (exercícios e bimestres disponíveis)"
+  }
+ },
+ "sistemas": [
+  {
+   "id": "siope",
+   "nome": "Obrigações do Fundeb (SIOPE)",
+   "pergunta": "O ente cumpre as obrigações da Lei nº 14.113/2020 e da Constituição apuradas no SIOPE?",
+   "url": "https://andersonwesney-lgtm.github.io/painel-siope-fundeb/",
+   "link_ente": "https://andersonwesney-lgtm.github.io/painel-siope-fundeb/?ano={ano}&bim=todos&ente={id_siope}",
+   "aceita_ente_no_link": true,
+   "referencia": "SIOPE (FNDE), dados abertos por exercício e bimestre; regras: CF art. 212 e 212-A; Lei nº 14.113/2020, arts. 25 a 28 e 38",
+   "periodo": "exercícios do manifesto publicado ({exercicios}); bimestre mais recente de cada ente",
+   "atualizacao": "semanal (segunda-feira), pelo GitHub Actions do repositório painel-siope-fundeb"
+  },
+  {
+   "id": "fundeb2027",
+   "nome": "Fundeb 2027 em números",
+   "pergunta": "Quanto o ente recebe e quanto poderia receber? Matrículas, ponderações, VAAF, VAAT e VAAR.",
+   "url": "https://claude.ai/artifact/Ck5kBM9p7PLBPieV3MhJBL",
+   "link_ente": "https://claude.ai/artifact/Ck5kBM9p7PLBPieV3MhJBL",
+   "aceita_ente_no_link": false,
+   "instrucao": "No topo do painel, escolha UF = {uf} e Município = {nome_painel} (código IBGE {id_fundeb}).",
+   "instrucao_estadual": "No topo do painel, escolha UF = {uf} e a rede estadual ({id_fundeb}).",
+   "referencia": "Censo Escolar 2026 (DOU, preliminar); Portaria nº 6/2026 (matrículas do Fundeb 2026); Portaria Interministerial MEC/MF nº 11/2026; Resoluções CIF nº 26/2026 e nº 27/2026; Portaria Conjunta FNDE/STN nº 7/2026",
+   "periodo": "Censo Escolar 2026 → exercício de repasse 2027 (estimativa; não é valor oficial de repasse)",
+   "atualizacao": "manual, por nova versão do painel",
+   "acesso": "painel publicado no claude.ai; abre para quem tiver acesso compartilhado"
+  },
+  {
+   "id": "demanda",
+   "nome": "Demanda reprimida 0 a 5 anos",
+   "pergunta": "Quantas crianças de 0 a 5 anos estão sem matrícula na etapa correspondente (creche e pré-escola)?",
+   "url": "https://claude.ai/artifact/Ck5kBM9p7PLBPieV3MhJBL",
+   "link_ente": "https://claude.ai/artifact/Ck5kBM9p7PLBPieV3MhJBL",
+   "aceita_ente_no_link": false,
+   "instrucao": "No painel, abra a aba “Demanda reprimida 0 a 5 anos” e escolha UF = {uf} e Município = {nome_painel} (código IBGE {id_fundeb}).",
+   "instrucao_estadual": "No painel, abra a aba “Demanda reprimida 0 a 5 anos” e escolha a UF {uf}.",
+   "referencia": "TabNet/DATASUS (popsvs2024br, estimativas RIPSA/MS); INEP, Sinopse Estatística da Educação Básica 2013–2025; plataforma Primeira Infância em Dados",
+   "periodo": "série 2013–2025; ano de referência 2025 (Censo Escolar 2025 e população estimada de 2025)",
+   "atualizacao": "anual, quando sai nova Sinopse do INEP ou nova estimativa no TabNet",
+   "acesso": "aba do painel Fundeb 2027 publicado no claude.ai"
+  }
+ ],
+ "brasoes": {
+  "publicar": "licenca_identificada",
+  "pasta": "insumos/brasoes",
+  "descricao": "Acervo de brasões municipais da Tech Play Edu (catálogo com página de origem, Wikidata, autor, licença e SHA-256; miniaturas de 160 px idênticas às do painel Fundeb 2027)",
+  "aviso_licenca": "Licença não confirmada pelo acervo: verifique na página de origem antes de reutilizar a imagem fora deste portal."
+ }
+}

@@ -1,0 +1,70 @@
+# Fundeb integrado: coleta o cadastro (IBGE + painel SIOPE), junta os brasões do acervo, gera o site, roda os testes e publica.
+# A publicação só acontece se coleta, geração e testes passarem; o GitHub Pages troca o site inteiro de uma vez
+# (nunca publica pela metade). Este repositório não altera o painel SIOPE nem o painel Fundeb 2027.
+name: Publicar Fundeb integrado
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  schedule:
+    - cron: "30 10 * * 1"   # segunda-feira, 07:30 em Brasília, depois da atualização semanal do painel SIOPE
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  gerar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      # Arquivos enviados pelo navegador chegam soltos na raiz; este passo os coloca nas pastas (não altera o repositório).
+      - name: Organizar arquivos nas pastas
+        run: |
+          mover() { d="$1"; shift; mkdir -p "$d"; for f in "$@"; do if [ -f "$f" ]; then mv "$f" "$d/"; fi; done; }
+          mover fundeb_core __init__.py __main__.py cli.py coleta.py entes.py gerar.py brasoes.py
+          mover web index.html portal.js estilo.css
+          mover config sistemas.json
+          mover insumos painel_fundeb2027_codigos.json
+          mover insumos/brasoes brasoes_catalogo.csv pacote_*.json
+          mover tests test_cadastro.py
+          find . -path ./.git -prune -o -type f -print | sort
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pytest==8.3.3
+      - name: Coletar fontes (IBGE e painel SIOPE publicado)
+        run: python -m fundeb_core coletar
+      - name: Gerar o site
+        run: python -m fundeb_core gerar
+      - name: Testes (sintéticos e com os dados coletados)
+        run: python -m pytest -q
+      - name: Guardar os arquivos brutos desta execução (90 dias)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: brutos-${{ github.run_id }}
+          path: brutos
+          retention-days: 90
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  publicar:
+    needs: gerar
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4

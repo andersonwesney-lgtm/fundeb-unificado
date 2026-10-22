@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fundeb integrado</title>
+<meta name="description" content="Cadastro único de entes e acesso aos sistemas de acompanhamento do Fundeb (Lei nº 14.113/2020).">
+<link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+<header class="topo">
+  <div class="marca">
+    <h1 id="titulo">Fundeb integrado</h1>
+    <p id="subtitulo" class="sub"></p>
+  </div>
+  <nav class="menu" aria-label="Sistemas">
+    <a href="./" class="ativo" aria-current="page">Início</a>
+    <span id="menuSistemas"></span>
+  </nav>
+</header>
+
+<main>
+  <p id="fase" class="aviso"></p>
+
+  <section class="busca" aria-labelledby="hBusca">
+    <h2 id="hBusca">Encontrar o ente</h2>
+    <div class="campos">
+      <label>Município, estado ou código
+        <input id="q" type="search" autocomplete="off" placeholder="Ex.: Arapiraca, 2700300, 270030 ou AL">
+      </label>
+      <label>UF
+        <select id="uf"><option value="">Todas</option></select>
+      </label>
+    </div>
+    <ul id="resultados" class="resultados" aria-live="polite"></ul>
+  </section>
+
+  <section id="ficha" class="ficha" hidden aria-live="polite"></section>
+
+  <section class="sobre" aria-labelledby="hSobre">
+    <h2 id="hSobre">Como ler esta página</h2>
+    <ul>
+      <li>Esta aba não calcula nem republica valores do Fundeb. Ela identifica o ente da mesma forma nos sistemas e leva a cada um deles; os números ficam nos sistemas de origem, com a fonte e o período de cada um.</li>
+      <li>O endereço guarda o ente e o exercício (<code>?ente=2700300&amp;ano=2026</code>). Aceita o código IBGE de 7 dígitos, o código do SIOPE (6 dígitos) e a sigla da UF.</li>
+      <li>Cada sistema responde a uma pergunta diferente e tem o seu próprio período de referência, indicado no cartão.</li>
+    </ul>
+  </section>
+</main>
+
+<footer id="rodape" class="rodape"></footer>
+<script src="portal.js"></script>
+</body>
+</html>
