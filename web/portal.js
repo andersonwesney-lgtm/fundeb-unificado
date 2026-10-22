@@ -31,12 +31,13 @@ async function iniciar() {
   const atalhos = S.man.portal.atalhos || [];
   if (atalhos.length) {
     $("#atalhos").innerHTML = atalhos.map((a) =>
-      `<a class="botao" href="${esc(a.url)}" rel="noopener">${esc(a.texto)} →</a>` +
-      (a.detalhe ? `<span class="sub">${esc(a.detalhe)}</span>` : "")).join("");
+      `<a class="btn primary" href="${esc(a.url)}" rel="noopener">${esc(a.texto)} →</a>` +
+      (a.detalhe ? `<span class="dica">${esc(a.detalhe)}</span>` : "")).join("");
     $("#atalhos").hidden = false;
   }
-  $("#menuSistemas").innerHTML = S.man.sistemas
-    .map((s) => `<a href="${esc(s.url)}" rel="noopener">${esc(s.nome)}</a>`).join("");
+  $("#menuSistemas").innerHTML = atalhos.concat(S.man.sistemas.map((s) => ({ texto: s.nome, url: s.url })))
+    .map((s) => `<a class="mitem" href="${esc(s.url)}" rel="noopener">${esc(s.texto)}${s.detalhe ? `<span class="dica">${esc(s.detalhe)}</span>` : ""}</a>`).join("");
+  montarMenu();
   const ufs = [...new Set(S.entes.map((e) => e.uf))].sort();
   $("#uf").insertAdjacentHTML("beforeend", ufs.map((u) => `<option>${u}</option>`).join(""));
   S.ano = String(S.man.siope.exercicios[S.man.siope.exercicios.length - 1]);
@@ -152,6 +153,9 @@ function mostrar(id, empilhar) {
   f.querySelectorAll("[data-ir]").forEach((a) => a.addEventListener("click", (ev) => { ev.preventDefault(); mostrar(a.dataset.ir, true); }));
   mostrarBrasao(e);
   if (empilhar) escreverURL();
+  $("#mFicha").hidden = false;
+  $("#mFicha").textContent = `Ficha: ${e.nome} (${e.uf})`;
+  marcarSecao("#ficha");
   f.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
@@ -211,4 +215,49 @@ function rodape() {
     <p>Tech Play Edu · Lei nº 14.113/2020 · <a href="dados/manifest.json">manifesto</a> · <a href="dados/entes.json">cadastro (JSON)</a></p>`;
 }
 
+/* ---------- tema e menu sanduíche (mesmo padrão do painel Fundeb 2027 em números) ---------- */
+function tema() {
+  const raiz = document.documentElement;
+  try { const t = localStorage.getItem("tpe-tema"); if (t) raiz.setAttribute("data-theme", t); } catch (e) { /* sem armazenamento */ }
+  const sinc = () => { const t = raiz.getAttribute("data-theme") || ""; document.querySelectorAll(".tema button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.t === t))); };
+  document.querySelector(".tema").addEventListener("click", (ev) => {
+    const b = ev.target.closest("button[data-t]"); if (!b) return;
+    if (b.dataset.t) raiz.setAttribute("data-theme", b.dataset.t); else raiz.removeAttribute("data-theme");
+    try { localStorage.setItem("tpe-tema", b.dataset.t); } catch (e) { /* sem armazenamento */ }
+    sinc();
+  });
+  sinc();
+}
+
+function marcarSecao(alvo) {
+  document.querySelectorAll("#tpeMenu .mitem[data-sec]").forEach((a) => {
+    const ativo = a.getAttribute("href") === alvo;
+    if (ativo) { a.setAttribute("aria-current", "page"); $("#secAtual").textContent = a.dataset.sec === "Ficha do ente" ? a.textContent : a.dataset.sec; }
+    else a.removeAttribute("aria-current");
+  });
+}
+
+function montarMenu() {
+  const menu = $("#tpeMenu"), fundo = $("#tpeFundo"), bot = $("#bMenu");
+  const largo = () => window.matchMedia("(min-width:1100px)").matches;
+  const abrir = (sim) => {
+    menu.classList.toggle("aberto", sim); fundo.classList.toggle("aberto", sim);
+    menu.setAttribute("aria-hidden", String(!sim)); bot.setAttribute("aria-expanded", String(sim));
+    document.body.classList.toggle("menu-fixo", sim && largo());
+    if (sim) menu.querySelector(".mitem")?.focus();
+  };
+  bot.addEventListener("click", () => abrir(!menu.classList.contains("aberto")));
+  $("#bFechar").addEventListener("click", () => { abrir(false); bot.focus(); });
+  fundo.addEventListener("click", () => abrir(false));
+  document.addEventListener("keydown", (ev) => { if (ev.key === "Escape" && menu.classList.contains("aberto")) { abrir(false); bot.focus(); } });
+  menu.querySelectorAll(".mitem[data-sec]").forEach((a) => a.addEventListener("click", (ev) => {
+    ev.preventDefault();
+    const alvo = document.querySelector(a.getAttribute("href"));
+    if (alvo && !alvo.hidden) alvo.scrollIntoView({ behavior: "smooth", block: "start" });
+    marcarSecao(a.getAttribute("href"));
+    if (!largo()) abrir(false);
+  }));
+}
+
+tema();
 iniciar();
