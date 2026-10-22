@@ -87,8 +87,41 @@ def _checar_siope_manifest(o):
 CHECAGENS = {"ibge_municipios": _checar_ibge, "siope_entes": _checar_siope_entes, "siope_manifest": _checar_siope_manifest}
 
 
-def coletar_tudo(config: dict, pasta: Path) -> list[dict]:
+RESERVA_MAX_DIAS = 35
+
+
+def usar_reserva(nome: str, pasta: Path, reserva: Path, erro: Exception, checar=None) -> dict:
+    """Fonte fora do ar: usa o arquivo bruto da última execução bem-sucedida, se for recente e passar na mesma checagem.
+
+    O arquivo é copiado sem alteração (mesmo SHA-256) e o metadado registra que é cópia de reserva, com a data
+    original da coleta e o erro desta execução. Sem reserva válida, a coleta falha (nada é publicado).
+    """
+    arq, meta_arq = reserva / f"{nome}.json", reserva / f"{nome}.meta.json"
+    if not (arq.exists() and meta_arq.exists()):
+        raise erro
+    meta = json.loads(meta_arq.read_text(encoding="utf-8"))
+    b = arq.read_bytes()
+    if hashlib.sha256(b).hexdigest() != meta.get("sha256"):
+        raise ErroColeta(f"{nome}: reserva com SHA-256 diferente do registrado; não usada. Erro original: {erro}") from erro
+    idade = (datetime.now(timezone.utc) - datetime.fromisoformat(meta["coletado_em"])).days
+    if idade > RESERVA_MAX_DIAS:
+        raise ErroColeta(f"{nome}: reserva de {idade} dias (limite {RESERVA_MAX_DIAS}); não usada. Erro original: {erro}") from erro
+    if checar and checar(json.loads(b)):
+        raise ErroColeta(f"{nome}: reserva não passa na checagem; não usada. Erro original: {erro}") from erro
+    pasta.mkdir(parents=True, exist_ok=True)
+    (pasta / f"{nome}.json").write_bytes(b)
+    meta.update(reserva=True, motivo_reserva=str(erro)[:300], reserva_usada_em=agora())
+    (pasta / f"{nome}.meta.json").write_text(json.dumps(meta, ensure_ascii=False, indent=1), encoding="utf-8")
+    return meta
+
+
+def coletar_tudo(config: dict, pasta: Path, reserva: Path | None = None) -> list[dict]:
     metas = []
     for nome, f in config["fontes"].items():
-        metas.append(coletar_json(nome, f["url"], pasta, CHECAGENS.get(nome)))
+        try:
+            metas.append(coletar_json(nome, f["url"], pasta, CHECAGENS.get(nome)))
+        except ErroColeta as e:
+            if reserva is None:
+                raise
+            metas.append(usar_reserva(nome, pasta, reserva, e, CHECAGENS.get(nome)))
     return metas
