@@ -144,6 +144,13 @@ def test_coleta_grava_bruto_com_hash_e_falha_com_mensagem(tmp_path):
     with pytest.raises(coleta.ErroColeta, match="formato"):
         coleta.coletar_json("siope_entes", formato.as_uri(), tmp_path / "b3", coleta.CHECAGENS["siope_entes"])
     assert not (tmp_path / "b3" / "siope_entes.json").exists()   # nada é gravado quando a validação falha
+    # resposta em gzip sem ter sido pedida (caso real da API do IBGE): descomprime e grava o JSON
+    import gzip
+    gz = tmp_path / "gz.json"
+    gz.write_bytes(gzip.compress(ok.read_bytes()))
+    meta = coleta.coletar_json("siope_manifest", gz.as_uri(), tmp_path / "b4", coleta.CHECAGENS["siope_manifest"])
+    assert (tmp_path / "b4" / "siope_manifest.json").read_bytes() == ok.read_bytes()
+    assert meta["sha256"] == hashlib.sha256(ok.read_bytes()).hexdigest()
 
 
 # ---------------------------------------------------------------- brasões
