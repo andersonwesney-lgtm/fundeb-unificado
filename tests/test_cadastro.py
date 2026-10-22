@@ -151,6 +151,17 @@ def test_coleta_grava_bruto_com_hash_e_falha_com_mensagem(tmp_path):
     meta = coleta.coletar_json("siope_manifest", gz.as_uri(), tmp_path / "b4", coleta.CHECAGENS["siope_manifest"])
     assert (tmp_path / "b4" / "siope_manifest.json").read_bytes() == ok.read_bytes()
     assert meta["sha256"] == hashlib.sha256(ok.read_bytes()).hexdigest()
+    # fonte fora do ar: usa a reserva (última coleta) só se o SHA-256 conferir e se for recente
+    fora = (tmp_path / "nao_existe.json").as_uri()
+    cfg = {"fontes": {"siope_manifest": {"url": fora}}}
+    m2 = coleta.coletar_tudo(cfg, tmp_path / "b5", reserva=tmp_path / "brutos")[0]
+    assert m2["reserva"] and m2["sha256"] == hashlib.sha256(ok.read_bytes()).hexdigest()
+    assert (tmp_path / "b5" / "siope_manifest.json").read_bytes() == ok.read_bytes()
+    with pytest.raises(coleta.ErroColeta):
+        coleta.coletar_tudo(cfg, tmp_path / "b6")                      # sem reserva: falha
+    (tmp_path / "brutos" / "siope_manifest.json").write_text("{}", encoding="utf-8")
+    with pytest.raises(coleta.ErroColeta, match="SHA-256"):
+        coleta.coletar_tudo(cfg, tmp_path / "b7", reserva=tmp_path / "brutos")  # reserva adulterada: falha
 
 
 # ---------------------------------------------------------------- brasões
