@@ -4,6 +4,7 @@ Nada é publicado a partir de um arquivo incompleto: o JSON é validado antes de
 """
 from __future__ import annotations
 
+import gzip
 import hashlib
 import json
 import time
@@ -33,7 +34,11 @@ def baixar(url: str, tentativas: int = 4, timeout: int = 60) -> bytes:
             with urllib.request.urlopen(req, timeout=timeout) as r:
                 if getattr(r, "status", None) not in (200, None):  # file:// (testes) não tem status
                     raise ErroColeta(f"HTTP {r.status}")
-                return r.read()
+                b = r.read()
+            # alguns servidores (ex.: API do IBGE) mandam gzip mesmo sem pedido; o bruto gravado é o conteúdo descomprimido
+            if b[:2] == b"\x1f\x8b":
+                b = gzip.decompress(b)
+            return b
         except Exception as e:  # noqa: BLE001
             ultimo = e
             if i < tentativas:
