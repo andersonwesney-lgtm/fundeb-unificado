@@ -12,6 +12,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
   pages: write
   id-token: write
 
@@ -40,8 +41,17 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install pytest==8.3.3
+      # Se uma fonte estiver fora do ar, a coleta usa o bruto da última execução bem-sucedida (mesmo SHA-256,
+      # até 35 dias) e o portal mostra que é cópia da última coleta. Sem reserva válida, nada é publicado.
+      - name: Reserva (brutos da última execução publicada)
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          id=$(gh run list -R "$GITHUB_REPOSITORY" --workflow publicar.yml --status success --limit 1 --json databaseId -q '.[0].databaseId')
+          if [ -n "$id" ]; then gh run download "$id" -R "$GITHUB_REPOSITORY" -n "brutos-$id" -D reserva && ls -la reserva; fi
       - name: Coletar fontes (IBGE e painel SIOPE publicado)
-        run: python -m fundeb_core coletar
+        run: python -m fundeb_core coletar --reserva reserva
       - name: Gerar o site
         run: python -m fundeb_core gerar
       - name: Testes (sintéticos e com os dados coletados)
