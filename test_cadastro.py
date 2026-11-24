@@ -97,6 +97,38 @@ def test_falha_quando_muitos_nomes_divergem():
         entes.construir(ibge, siope, painel)
 
 
+def _com_extras(n):
+    """Sintético com n municípios a mais em AL, presentes no IBGE, no SIOPE e no painel."""
+    ibge, siope, painel = _sintetico()
+    siope = copy.deepcopy(siope)
+    for k in range(n):
+        cod = f"27{k + 100:04d}0"
+        ibge.append(_ibge(cod, f"Município {k}", "AL"))
+        siope["linhas"].append([cod[:6], f"Município {k}", "AL", "Nordeste", "municipal", 1])
+    return ibge, siope, dict(painel, municipios=painel["municipios"] + n)
+
+
+def test_municipio_fora_do_catalogo_siope():
+    """Caso real de 24/11/2026: o catálogo do painel SIOPE deixou de trazer municípios sem declarações (ex.: Porto do
+    Mangue/RN). Eles ficam com o código calculado e com aviso; o vínculo com o painel Fundeb 2027 não muda."""
+    ibge, siope, painel = _com_extras(200)
+    ibge.append(_ibge("2410256", "Porto do Mangue", "RN"))
+    painel = dict(painel, municipios=painel["municipios"] + 1)
+    fora: list = []
+    cad = entes.construir(ibge, siope, painel, None, fora)
+    assert fora == [{"id": "2410256", "id_siope": "241025", "uf": "RN", "nome": "Porto do Mangue"}]
+    e = {x["id"]: x for x in cad}["2410256"]
+    assert e["tipo"] == "municipal" and e["id_siope"] == "241025" and e["id_fundeb"] == "2410256"
+    assert "Não consta no catálogo atual do painel SIOPE" in e["obs"]
+
+
+def test_falha_quando_muitos_municipios_fora_do_siope():
+    ibge, siope, painel = _com_extras(200)
+    siope["linhas"] = [r for r in siope["linhas"] if not str(r[0]).startswith("2701")]   # tira 100 de 204 municípios
+    with pytest.raises(entes.ErroCadastro, match="fora do catálogo do painel SIOPE"):
+        entes.construir(ibge, siope, painel)
+
+
 def test_falha_quando_municipio_novo_nao_esta_nos_sistemas():
     ibge, siope, painel = _sintetico()
     ibge = ibge + [_ibge("2799999", "Novo Município", "AL")]

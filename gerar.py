@@ -29,7 +29,8 @@ def gerar(brutos: Path, saida: Path, raiz: Path = RAIZ) -> dict:
     painel = json.loads((raiz / "insumos" / "painel_fundeb2027_codigos.json").read_text(encoding="utf-8"))
 
     nomes_dif: list[dict] = []
-    cad = construir(ibge, siope_entes, painel, nomes_dif)
+    fora_siope: list[dict] = []
+    cad = construir(ibge, siope_entes, painel, nomes_dif, fora_siope)
 
     if saida.exists():
         shutil.rmtree(saida)
@@ -67,7 +68,9 @@ def gerar(brutos: Path, saida: Path, raiz: Path = RAIZ) -> dict:
                   "data_referencia": siope_manifest.get("data_referencia")},
         "entes": {"arquivo": "dados/entes.json", "sha256": _sha(entes_b), "total": len(cad), "por_tipo": contagem,
                   # mesmo código e mesma UF nos dois sistemas; só a grafia do nome difere (o cadastro usa o nome do IBGE)
-                  "nomes_diferentes_no_siope": {"total": len(nomes_dif), "lista": nomes_dif}},
+                  "nomes_diferentes_no_siope": {"total": len(nomes_dif), "lista": nomes_dif},
+                  # municípios sem linha no catálogo do painel SIOPE: ficam com o código calculado e um aviso
+                  "fora_do_catalogo_siope": {"total": len(fora_siope), "lista": fora_siope}},
         "fontes": fontes,
         "brasoes": resumo_brasoes,
     }

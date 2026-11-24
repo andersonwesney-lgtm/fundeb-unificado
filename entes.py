@@ -45,6 +45,8 @@ BRASILIA = "5300108"
 NORONHA = "2605459"
 # fração máxima de municípios do SIOPE com nome diferente do IBGE (depois de normalizar) antes de barrar a publicação
 LIMITE_NOMES_DIVERGENTES = 0.05
+# fração máxima de municípios do IBGE fora do catálogo do painel SIOPE antes de barrar a publicação
+LIMITE_FORA_DO_SIOPE = 0.01
 
 
 def normalizar_nome(nome: str) -> str:
@@ -71,9 +73,12 @@ def _uf_do_municipio_ibge(m: dict) -> str:
     raise ErroCadastro(f"Município IBGE {m.get('id')} sem UF identificável no arquivo do IBGE.")
 
 
-def construir(ibge: list[dict], siope_entes: dict, painel_fundeb: dict, divergencias: list | None = None) -> list[dict]:
+def construir(ibge: list[dict], siope_entes: dict, painel_fundeb: dict, divergencias: list | None = None,
+              fora_do_siope: list | None = None) -> list[dict]:
     """Monta o cadastro a partir das três fontes e valida a correspondência. Levanta ErroCadastro em qualquer divergência
-    de código, UF ou cobertura. Nomes que diferem do IBGE só na grafia são anotados em `divergencias`, se for passada."""
+    de código, UF ou cobertura. Nomes que diferem do IBGE só na grafia são anotados em `divergencias`, se for passada.
+    Municípios do IBGE que não estão no catálogo do painel SIOPE (até LIMITE_FORA_DO_SIOPE) recebem o código SIOPE
+    calculado (IBGE sem o dígito verificador) e são anotados em `fora_do_siope`, se for passada."""
     erros: list[str] = []
     nomes_dif: list[dict] = []
     mun_ibge: dict[str, tuple[str, str]] = {}
@@ -114,6 +119,17 @@ def construir(ibge: list[dict], siope_entes: dict, painel_fundeb: dict, divergen
         erros.append(f"SIOPE: nome divergente em {len(nomes_dif)} de {len(siope_mun)} municípios (limite "
                      f"{LIMITE_NOMES_DIVERGENTES:.0%}); os códigos podem ter se desalinhado. Exemplos: " +
                      "; ".join(f"{d['id_siope']}: {d['nome_siope']!r} × IBGE {d['nome_ibge']!r}" for d in nomes_dif[:5]))
+    # Desde 05/11/2026 o painel SIOPE monta o catálogo só com os entes que têm registros no SIOPE (o IBGE não responde
+    # ao GitHub Actions); município sem nenhuma declaração some da lista. O código SIOPE é o IBGE sem o dígito
+    # verificador, então o vínculo continua determinado: o município fica com esse código e com o aviso no cadastro.
+    fora: list[dict] = []
+    for cod7, (nome, uf) in sorted(mun_ibge.items()):
+        if cod7 not in siope_mun and cod7 != BRASILIA:
+            fora.append({"id": cod7, "id_siope": cod7[:6], "uf": uf, "nome": nome})
+    if mun_ibge and len(fora) > LIMITE_FORA_DO_SIOPE * len(mun_ibge):
+        erros.append(f"SIOPE: {len(fora)} de {len(mun_ibge)} municípios do IBGE fora do catálogo do painel SIOPE (limite "
+                     f"{LIMITE_FORA_DO_SIOPE:.0%}); o catálogo pode estar incompleto. Exemplos: " +
+                     "; ".join(f"{d['id']} {d['nome']}/{d['uf']}" for d in fora[:5]))
     if siope_est != {f"UF-{v[0]}" for v in UFS.values()}:
         erros.append(f"SIOPE: governos estaduais divergentes das 27 UFs: {sorted(siope_est ^ {f'UF-{v[0]}' for v in UFS.values()})}")
 
@@ -130,6 +146,11 @@ def construir(ibge: list[dict], siope_entes: dict, painel_fundeb: dict, divergen
         raise ErroCadastro("Cadastro de entes inconsistente:\n  - " + "\n  - ".join(erros[:50]))
     if divergencias is not None:
         divergencias[:] = sorted(nomes_dif, key=lambda d: d["id"])
+    if fora_do_siope is not None:
+        fora_do_siope[:] = fora
+    fora_ids = {d["id"] for d in fora}
+    for d in fora:
+        siope_mun[d["id"]] = d["id_siope"]
 
     cad: list[dict] = []
     for cuf, (sg, nome_uf, reg) in sorted(UFS.items()):
@@ -143,6 +164,9 @@ def construir(ibge: list[dict], siope_entes: dict, painel_fundeb: dict, divergen
         elif cod7 == NORONHA:
             obs = ("Distrito estadual de Pernambuco. O SIOPE traz declarações próprias (260545); no painel Fundeb 2027 as "
                    "matrículas estão na rede estadual de PE.")
+        if cod7 in fora_ids:
+            obs = (obs + " " if obs else "") + (f"Não consta no catálogo atual do painel SIOPE (sem declarações registradas); "
+                                                f"o código SIOPE {cod7[:6]} é o do IBGE sem o dígito verificador.")
         cad.append({"id": cod7, "tipo": "municipal" if cod7 not in (BRASILIA, NORONHA) else
                     ("referencia_df" if cod7 == BRASILIA else "distrito_estadual"),
                     "nome": nome, "uf": sg, "cod_uf": cod7[:2], "regiao": UFS[cod7[:2]][2], "ibge7": cod7,
